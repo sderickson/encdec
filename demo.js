@@ -1,39 +1,49 @@
-net = require('net');
-fs = require('fs');
-HOST = '127.0.0.1';
-PORT = 8001;
-if(process.argv.length != 3) {
+var net = require('net');
+var fs = require('fs');
+var HOST = '127.0.0.1';
+
+if(process.argv.length < 3) {
   console.log("Needs song name as an argument");
   process.exit(1);
 }
 
+var PORT;
+var ext = process.argv[3] || 'mp3';
+if (ext==='mp3') {
+  PORT = 8000;
+}
+else if (ext==='flac') {
+  PORT = 8001;
+}
+else {
+  ext = 'wav';
+  PORT = 8002;
+}
+
 fileStream = fs.createReadStream(process.argv[2]);
-outputFilename = "output.flac";
+outputFilename = "output."+ext;
 writeStream = fs.createWriteStream(outputFilename);
 data = '';
 client = new net.Socket();
 
+var endBuffer = new Buffer(0);
+var errorString = 'PROCESS_ERROR';
+var errorBuffer = JSON.stringify(new Buffer(errorString).toJSON());
+
 client.connect(PORT, HOST, function() {
-  console.log('Connected!');
-  fileStream.pipe(client);
-  client.pipe(writeStream);
-  console.log("Streaming to file #{outputFilename}!");
-  client.on('end', function() {
-    console.log('finished client stream');
-  });
+  fileStream.pipe(client).pipe(writeStream);
   client.on('error', function() {
-    console.log('errored client stream');
+    console.log('Client stream errored.');
   });
-  writeStream.on('end', function() {
-    console.log('finished write stream');
+  client.on('data', function(chunk) {
+    endBuffer = Buffer.concat([endBuffer, chunk]);
+    if(endBuffer.length > errorString.length) {
+      endBuffer = endBuffer.slice(endBuffer.length-errorString.length)
+    }
+    if(errorBuffer === JSON.stringify(endBuffer.toJSON())) {
+      console.log('Failed to process audio file.')
+    }
   });
-  writeStream.on('error', function() {
-    console.log('errored write stream');
-  });
-  fileStream.on('end', function() {
-    console.log('finished file stream');
-  });
-  fileStream.on('error', function() {
-    console.log('errored file stream');
-  });
+  fileStream.on('end', function() { client.end() });
+  client.on('close', function() { console.log('client closed'); });
 });
