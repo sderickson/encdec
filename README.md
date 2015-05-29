@@ -18,3 +18,5 @@ To test:
 To use from another server, see `demo.js`. Currently indicates when the process fails by sending the string 'PROCESS_ERROR', which the client must look for and handle accordingly.
 
 If you'd like to use this, I recommend forking, then editing server.js to use the command line arguments you would like.
+
+Based on [encoding-server](https://github.com/schmatz/encoding-server) by [Michael Schmatz](https://github.com/schmatz).
