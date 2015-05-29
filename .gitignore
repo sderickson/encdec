@@ -54,7 +54,5 @@ nbproject
 
 npm-debug.log*
 
-# testing files
-*.wav
-*.flac
-*.mp3
+# testing file outputs
+test-result-*

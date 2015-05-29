@@ -18,7 +18,6 @@ var handleProcess = function(client, child, processName) {
   client.on('data', function(chunk) {
     dataSize += chunk.length;
     process.stdout.write(' '+(dataSize/1048576).toFixed(2)+'MB read\r');
-    if(dataSize > 1000000) { child.kill(); } // testing
   });
 
   // handle client/process errors
@@ -51,11 +50,11 @@ toMP3Server.listen(8000, function() { log('MP3  encoder live on 8000'); });
 
 //- WAV => FLAC
 
-var toFLACServer = net.createServer(function(client) {
+var toFLACServer = net.createServer({allowHalfOpen: true}, function(client) {
   // hook up streams
   var child = spawn('flac', ['-', '--verify', '--best'], { stdio: ['pipe', 'pipe'] });
   client.pipe(child.stdin);
-  child.stdout.pipe(client);
+  child.stdout.pipe(client, {end: false});
   handleProcess(client, child, "WAV => FLAC");
 });
 
@@ -68,7 +67,7 @@ var toWAVServer = net.createServer({allowHalfOpen: true}, function(client) {
   // hook up streams
   var child = spawn('flac', ['-d', '-'], { stdio: ['pipe', 'pipe'] });
   client.pipe(child.stdin);
-  child.stdout.pipe(client);
+  child.stdout.pipe(client, {end: false});
   handleProcess(client, child, "FLAC => WAV");
 });
 

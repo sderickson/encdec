@@ -41,7 +41,6 @@ client.connect(PORT, HOST, function() {
       endBuffer = endBuffer.slice(endBuffer.length-errorString.length)
     }
   });
-  fileStream.on('end', function() { client.end() });
   client.on('close', function() {
     console.log('client closed');
     if(errorBuffer === JSON.stringify(endBuffer.toJSON())) {
