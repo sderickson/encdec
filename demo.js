@@ -40,10 +40,12 @@ client.connect(PORT, HOST, function() {
     if(endBuffer.length > errorString.length) {
       endBuffer = endBuffer.slice(endBuffer.length-errorString.length)
     }
-    if(errorBuffer === JSON.stringify(endBuffer.toJSON())) {
-      console.log('Failed to process audio file.')
-    }
   });
   fileStream.on('end', function() { client.end() });
-  client.on('close', function() { console.log('client closed'); });
+  client.on('close', function() {
+    console.log('client closed');
+    if(errorBuffer === JSON.stringify(endBuffer.toJSON())) {
+      console.log('Process failed.')
+    }
+  });
 });
