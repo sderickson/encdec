@@ -1,6 +1,7 @@
 var net = require('net');
 var fs = require('fs');
-var HOST = '127.0.0.1';
+//var HOST = '127.0.0.1';
+var HOST = '192.168.59.103';
 
 if(process.argv.length < 3) {
   console.log("Needs song name as an argument");
@@ -19,6 +20,9 @@ else {
   ext = 'wav';
   PORT = 8002;
 }
+
+PORT = 8003;
+ext = 'txt';
 
 fileStream = fs.createReadStream(process.argv[2]);
 outputFilename = "output."+ext;

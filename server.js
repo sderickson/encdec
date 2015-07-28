@@ -72,3 +72,15 @@ var toWAVServer = net.createServer({allowHalfOpen: true}, function(client) {
 });
 
 toWAVServer.listen(8002, function() { log('FLAC decoder live on 8002'); });
+
+
+// IDENTIFY
+
+var identifyServer = net.createServer({allowHalfOpen: true}, function(client) {
+  var child = spawn('sox', ['--i', '-'], { stdio: ['pipe', 'pipe'] });
+  client.pipe(child.stdin);
+  child.stdout.pipe(client, {end: false});
+  handleProcess(client, child, "FILE => INFO");
+});
+
+identifyServer.listen(8003, function() { log('ID server live on 8003'); });
