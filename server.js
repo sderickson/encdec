@@ -26,6 +26,11 @@ var handleProcess = function(client, child, processName) {
   child.stdin.on('error', function() { handleError(client); });
   child.on('close', function(code) { code ? handleError(client) : client.end(); });
 
+  child.stderr.on('data', function(chunk) {
+    console.log('error data', chunk.toString(), 'did you know soxi cannot handle being piped mp3 files?');
+    handleError(client);
+  });
+
   // logging open/close events
   log('OPEN  ' + processName);
   client.on('close', function() {
@@ -77,7 +82,7 @@ toWAVServer.listen(8002, function() { log('FLAC decoder live on 8002'); });
 // IDENTIFY
 
 var identifyServer = net.createServer({allowHalfOpen: true}, function(client) {
-  var child = spawn('sox', ['--i', '-'], { stdio: ['pipe', 'pipe'] });
+  var child = spawn('sox', ['--i', '-'], { stdio: ['pipe', 'pipe', 'pipe'] });
   client.pipe(child.stdin);
   child.stdout.pipe(client, {end: false});
   handleProcess(client, child, "FILE => INFO");
