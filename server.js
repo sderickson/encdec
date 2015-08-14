@@ -33,7 +33,7 @@ var handleProcess = function(client, child, processName) {
   child.stderr.on('data', function(chunk) {
     done = true;
     client.unpipe(child.stdin);
-    //console.log('error data', chunk.toString());
+    console.log('error data', chunk.toString());
   });
 
   // logging open/close events
