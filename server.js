@@ -7,29 +7,23 @@ var log = function() {
   console.log.apply(console, args);
 };
 
-var handleError = function(client) {
+var handleError = function(client, child) {
   log('Encoding/decoding failed.');
+  child.stdin.pause();
+  child.kill();
   client.end('PROCESS_ERROR'); // client should check this isn't the last piece of data sent
 };
 
 var handleProcess = function(client, child, processName) {
-  // progress logging
-  var dataSize = 0;
-  client.on('data', function(chunk) {
-    dataSize += chunk.length;
-    process.stdout.write(' '+(dataSize/1048576).toFixed(2)+'MB read\r');
-  });
-
   // handle client/process errors
-  client.on('error', function() { console.log('Client abruptly disconnected'); });
-  child.stdout.on('error', function() { handleError(client); });
-  child.stdin.on('error', function() { handleError(client); });
-  child.on('close', function(code) { code ? handleError(client) : client.end(); });
-
-  child.stderr.on('data', function(chunk) {
-    console.log('error data', chunk.toString(), 'did you know soxi cannot handle being piped mp3 files?');
-    handleError(client);
+  client.on('error', function() {
+    console.log('Client abruptly disconnected');
+    child.stdin.pause();
+    child.kill();
   });
+  child.stdout.on('error', function() { handleError(client, child); });
+  child.stdin.on('error', function() { handleError(client, child); });
+  child.on('close', function(code) { code ? handleError(client, child) : client.end(); });
 
   // logging open/close events
   log('OPEN  ' + processName);

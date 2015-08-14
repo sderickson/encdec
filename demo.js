@@ -21,8 +21,8 @@ else {
   PORT = 8002;
 }
 
-PORT = 8003;
-ext = 'txt';
+//PORT = 8003;
+//ext = 'txt';
 
 fileStream = fs.createReadStream(process.argv[2]);
 outputFilename = "output."+ext;
