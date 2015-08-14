@@ -15,6 +15,8 @@ var handleError = function(client, child) {
 };
 
 var handleProcess = function(client, child, processName) {
+  var done = false;
+
   // handle client/process errors
   client.on('error', function() {
     console.log('Client abruptly disconnected');
@@ -22,8 +24,17 @@ var handleProcess = function(client, child, processName) {
     child.kill();
   });
   child.stdout.on('error', function() { handleError(client, child); });
-  child.stdin.on('error', function() { handleError(client, child); });
+  child.stdin.on('error', function() {
+    if(!done || processName !== 'WAV => MP3')
+      handleError(client, child);
+  });
   child.on('close', function(code) { code ? handleError(client, child) : client.end(); });
+
+  child.stderr.on('data', function(chunk) {
+    done = true;
+    client.unpipe(child.stdin);
+    //console.log('error data', chunk.toString());
+  });
 
   // logging open/close events
   log('OPEN  ' + processName);
