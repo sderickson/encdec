@@ -48,7 +48,7 @@ var handleProcess = function(client, child, processName) {
 
 var toMP3Server = net.createServer({allowHalfOpen: true}, function(client) {
   // hook up streams
-  var child = spawn('lame', ["-q0", "-b320", "-", "-"], { stdio: ['pipe', 'pipe'] });
+  var child = spawn('lame', ["-q0", "-b320", "--quiet", "-", "-"], { stdio: ['pipe', 'pipe'] });
   client.pipe(child.stdin);
   child.stdout.pipe(client, {end: false});
   handleProcess(client, child, "WAV => MP3");
