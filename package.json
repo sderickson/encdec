@@ -1,0 +1,15 @@
+{
+  "name": "encdec",
+  "description": "Server for conversion and identification of audio files.",
+  "author": "Scott Erickson <sderickson@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sderickson/encdec"
+  },
+  "dependencies": {
+    "express": "^4.13.3",
+    "multer": "^1.0.3",
+    "on-finished": "^2.3.0",
+    "request": "^2.60.0"
+  }
+}

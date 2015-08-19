@@ -12,6 +12,7 @@ var handleError = function(client, child) {
   child.stdin.pause();
   child.kill();
   client.end('PROCESS_ERROR'); // client should check this isn't the last piece of data sent
+  client.destroy();
 };
 
 var handleProcess = function(client, child, processName) {
@@ -38,7 +39,6 @@ var handleProcess = function(client, child, processName) {
   // logging open/close events
   log('OPEN  ' + processName);
   client.on('close', function() {
-    process.stdout.write('\n');
     log('CLOSE ' + processName)
   });
 };
@@ -93,3 +93,98 @@ var identifyServer = net.createServer({allowHalfOpen: true}, function(client) {
 });
 
 identifyServer.listen(8003, function() { log('ID server live on 8003'); });
+
+
+
+// HTTP SERVER
+
+var express = require('express');
+var multer = require('multer');
+var http = require('http');
+var winston = require('winston');
+var onFinished = require('on-finished');
+var fs = require('fs');
+
+
+winston.remove(winston.transports.Console);
+winston.add(winston.transports.Console, {
+  colorize: true,
+  timestamp: true
+});
+
+var app = express();
+app.set('port', 8010);
+
+var storage = multer.diskStorage({
+  filename: function(req, file, cb) {
+    return cb(null, Date.now()+'-'+file.originalname);
+  }
+});
+
+var upload = multer({storage: storage});
+app.use(upload.single('file'));
+
+app.post('/wav-to-mp3', function(req, res) {
+  winston.info('WAV => MP3', req.file.originalname);
+  var topath = req.file.path.replace('.wav', '.mp3');
+  var child = spawn('lame', ["-q0", "-b320", "--quiet", req.file.path, topath]);
+  child.on('close', function(code) {
+    winston.info('WAV => MP3 done', req.file.originalname, code);
+    if (code) {
+      res.status(422).send('Failure');
+    }
+    else {
+      res.sendFile(topath);
+    }
+    onFinished(res, function() {
+      fs.unlink(req.file.path);
+      fs.unlink(topath);
+    });
+  });
+});
+
+app.post('/wav-to-flac', function(req, res) {
+  winston.info('WAV => FLAC', req.file.originalname);
+  var topath = req.file.path.replace('.wav', '.flac');
+  var child = spawn('flac', [req.file.path, '--verify', '--best', '-o', topath]);
+  child.on('close', function(code) {
+    winston.info('WAV => FLAC done', req.file.originalname, code);
+    if (code) {
+      res.status(422).send('Failure');
+    }
+    else {
+      res.sendFile(topath);
+    }
+    onFinished(res, function() {
+      fs.unlink(req.file.path);
+      fs.unlink(topath);
+    });
+  });
+});
+
+app.post('/flac-to-wav', function(req, res) {
+  winston.info('FLAC => WAV begin', req.file.originalname);
+  var topath = req.file.path.replace('.flac', '.wav');
+  var child = spawn('flac', [req.file.path, '-d', '-o', topath]);
+  child.on('close', function(code) {
+    winston.info('FLAC => WAV done', req.file.originalname);
+    if (code) {
+      res.status(422).send('Failure');
+    }
+    else {
+      res.sendFile(topath);
+    }
+    onFinished(res, function() {
+      fs.unlink(req.file.path);
+      fs.unlink(topath);
+    });
+  });
+});
+
+app.all('*', function(req, res) {
+  res.status(404).send('Not found');
+});
+
+http.createServer(app).listen(8010, function() {
+  winston.info('HTTP server live on 8010');
+});

@@ -25,30 +25,50 @@ else {
 //ext = 'txt';
 
 fileStream = fs.createReadStream(process.argv[2]);
-outputFilename = "output."+ext;
-writeStream = fs.createWriteStream(outputFilename);
-data = '';
-client = new net.Socket();
+outputFilename = "output.wav";
+//data = '';
+//client = new net.Socket();
+//
+//var endBuffer = new Buffer(0);
+//var errorString = 'PROCESS_ERROR';
+//var errorBuffer = JSON.stringify(new Buffer(errorString).toJSON());
+//
+//client.connect(PORT, HOST, function() {
+//  fileStream.pipe(client).pipe(writeStream);
+//  client.on('error', function() {
+//    console.log('Client stream errored.');
+//  });
+//  client.on('data', function(chunk) {
+//    endBuffer = Buffer.concat([endBuffer, chunk]);
+//    if(endBuffer.length > errorString.length) {
+//      endBuffer = endBuffer.slice(endBuffer.length-errorString.length)
+//    }
+//  });
+//  client.on('close', function() {
+//    console.log('client closed');
+//    if(errorBuffer === JSON.stringify(endBuffer.toJSON())) {
+//      console.log('Process failed.')
+//    }
+//  });
+//});
 
-var endBuffer = new Buffer(0);
-var errorString = 'PROCESS_ERROR';
-var errorBuffer = JSON.stringify(new Buffer(errorString).toJSON());
+var request = require('request');
 
-client.connect(PORT, HOST, function() {
-  fileStream.pipe(client).pipe(writeStream);
-  client.on('error', function() {
-    console.log('Client stream errored.');
-  });
-  client.on('data', function(chunk) {
-    endBuffer = Buffer.concat([endBuffer, chunk]);
-    if(endBuffer.length > errorString.length) {
-      endBuffer = endBuffer.slice(endBuffer.length-errorString.length)
-    }
-  });
-  client.on('close', function() {
-    console.log('client closed');
-    if(errorBuffer === JSON.stringify(endBuffer.toJSON())) {
-      console.log('Process failed.')
-    }
-  });
+var url = 'http://'+HOST+':'+8010+'/wav-to-mp3';
+
+var req = request.post({
+  url: url,
+  formData: {
+    'file': fileStream
+  }
+});
+
+req.on('response', function(response) {
+  if(response.statusCode === 200) {
+    var writeStream = fs.createWriteStream(outputFilename);
+    req.pipe(writeStream);
+  }
+  else {
+    console.log('failed?', response.statusCode);
+  }
 });

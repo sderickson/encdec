@@ -8,5 +8,7 @@ WORKDIR /src
 ADD server.js server.js
 ADD . .
 
-EXPOSE 8000 8001 8002 8003
+RUN npm install
+
+EXPOSE 8000 8001 8002 8003 8010
 CMD ["forever", "server.js"]
