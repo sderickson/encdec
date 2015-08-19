@@ -116,7 +116,7 @@ var app = express();
 
 var CONVERSION_TIMEOUT = 1800000;
 
-app.post(function (req, res, next) {
+app.post('*', function (req, res, next) {
   res.connection.setTimeout(CONVERSION_TIMEOUT);
   next();
 });
