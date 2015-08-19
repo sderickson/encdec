@@ -124,6 +124,13 @@ var storage = multer.diskStorage({
 var upload = multer({storage: storage});
 app.use(upload.single('file'));
 
+var CONVERSION_TIMEOUT = 1800000;
+
+app.post(function (req, res, next) {
+  res.connection.setTimeout(CONVERSION_TIMEOUT);
+  next();
+});
+
 app.post('/wav-to-mp3', function(req, res) {
   winston.info('WAV => MP3', req.file.originalname);
   var topath = req.file.path.replace('.wav', '.mp3');
